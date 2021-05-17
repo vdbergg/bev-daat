@@ -3,9 +3,3 @@
 //
 
 #include "../header/ActiveNode.h"
-
-ActiveNode::ActiveNode(unsigned node, EditVector* editVector, unsigned level) {
-    this->node = node;
-    this->editVector = editVector;
-    this->level = level;
-}

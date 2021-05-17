@@ -11,9 +11,8 @@ using namespace std;
 Beva::Beva(Trie *trie, Experiment* experiment, int editDistanceThreshold) {
     this->editDistanceThreshold = editDistanceThreshold;
     this->bitmapSize = (1 << ((2 * this->editDistanceThreshold) + 1)) - 1; // 2^(2tau + 1) - 1
+    this->editVectorSize = (2 * this->editDistanceThreshold) + 1;
     this->trie = trie;
-    this->initialEditVector = new EditVector(this->editDistanceThreshold);
-    this->initialEditVector->buildInitialEditVector();
     this->bitmapZero = 0;
     this->experiment = experiment;
 }
@@ -22,11 +21,13 @@ Beva::~Beva() {
 }
 
 void Beva::process(char ch, int prefixQueryLength, vector<ActiveNode>& oldActiveNodes,
-        vector<ActiveNode>& currentActiveNodes, unsigned (&bitmaps)[CHAR_SIZE]) {
+        vector<ActiveNode>& currentActiveNodes, unsigned *bitmaps) {
     this->updateBitmap(ch, bitmaps);
 
     if (prefixQueryLength == 1) {
-        currentActiveNodes.emplace_back(this->trie->root, this->initialEditVector, 0);
+        currentActiveNodes.resize(currentActiveNodes.size() + 1);
+        currentActiveNodes[currentActiveNodes.size() - 1].buildInitialValue(this->trie->root,0,
+                this->editDistanceThreshold, this->editVectorSize);
         #ifdef BEVA_IS_COLLECT_COUNT_OPERATIONS_H
         this->experiment->incrementNumberOfActiveNodes(query.length());
         #endif
@@ -39,39 +40,41 @@ void Beva::process(char ch, int prefixQueryLength, vector<ActiveNode>& oldActive
     }
 }
 
-void Beva::updateBitmap(char ch, unsigned (&bitmaps)[CHAR_SIZE]) { // query is equivalent to Q' with the last character c
-    for (auto &bitmap : bitmaps) {
-        bitmap = utils::leftShiftBitInDecimal(bitmap, 1, this->bitmapSize);
+void Beva::updateBitmap(char ch, unsigned *bitmaps) { // query is equivalent to Q' with the last character c
+    for (unsigned x = 0; x < CHAR_SIZE; x++) {
+        bitmaps[x] = utils::leftShiftBitInDecimal(bitmaps[x], 1, this->bitmapSize);
     }
   
     bitmaps[ch] = bitmaps[ch] | 1;
 }
 
 void Beva::findActiveNodes(unsigned queryLength, ActiveNode &oldActiveNode,
-        vector<ActiveNode> &activeNodes, unsigned (&bitmaps)[CHAR_SIZE]) {
+			   vector<ActiveNode> &activeNodes, unsigned *bitmaps) {
     unsigned child = this->trie->getNode(oldActiveNode.node).children;
     unsigned endChilds = child + this->trie->getNode(oldActiveNode.node).numChildren;
 
     unsigned tempSize = oldActiveNode.level + 1;
     for (; child < endChilds; child++) {
+        ActiveNode newActiveNode;
         #ifdef BEVA_IS_COLLECT_COUNT_OPERATIONS_H
         this->experiment->incrementNumberOfIterationInChildren(queryLength);
         #endif
 
-        EditVector* newEditVector = this->getNewEditVector(queryLength, oldActiveNode.editVector, tempSize,
-                                                 this->trie->getNode(child).getValue(), bitmaps);
+        unsigned bitmap = this->buildBitmap(queryLength, tempSize, this->trie->getNode(child).getValue(), bitmaps);
+        this->buildEditVectorWithBitmap(bitmap, oldActiveNode.editVector, newActiveNode.editVector);
 
-        if (newEditVector->isFinal) continue;
+        if (this->editVectorIsFinal(newActiveNode.editVector)) continue;
 
         #ifdef BEVA_IS_COLLECT_COUNT_OPERATIONS_H
         this->experiment->incrementNumberOfActiveNodes(queryLength);
         #endif
 
-        if (newEditVector->getEditDistance((int) queryLength - (int) tempSize) <= this->editDistanceThreshold) {
-            activeNodes.emplace_back(child, newEditVector, tempSize);
+        newActiveNode.node = child;
+        newActiveNode.level = tempSize;
+        if (this->getEditDistance((int) queryLength - (int) tempSize, newActiveNode.editVector) <= this->editDistanceThreshold) {
+            activeNodes.emplace_back(newActiveNode);
         } else {
-            ActiveNode tmp(child, newEditVector, tempSize);
-            this->findActiveNodes(queryLength, tmp, activeNodes, bitmaps);
+            this->findActiveNodes(queryLength, newActiveNode, activeNodes, bitmaps);
         }
     }
 }

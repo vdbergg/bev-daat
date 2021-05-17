@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 
 void loadConfig() {
 
-    std::ifstream is_file("/home/berg/workspace/mestrado/bev-daat/path.cfg");
+    std::ifstream is_file("./path.cfg");
     std::string line;
 
     while( std::getline(is_file, line) )

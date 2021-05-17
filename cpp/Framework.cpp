@@ -185,8 +185,8 @@ vector<char *> Framework::processFullQuery(string &query, int queryPosition) {
     vector<ActiveNode> currentActiveNodes;
     vector<ActiveNode> oldActiveNodes;
 
-    unsigned bitmaps[CHAR_SIZE];
-    for (auto & bitmap : bitmaps) bitmap = this->beva->bitmapZero;
+    unsigned *bitmaps= new unsigned[CHAR_SIZE];
+    for (int x = 0; x < CHAR_SIZE; x++) bitmaps[x] = this->beva->bitmapZero;
 
     for (int currentPrefixQuery = 1; currentPrefixQuery <= query.size(); currentPrefixQuery++) {
         swap(oldActiveNodes, currentActiveNodes);
@@ -201,7 +201,6 @@ vector<char *> Framework::processFullQuery(string &query, int queryPosition) {
         this->experiment->endSimpleQueryProcessingTime(currentActiveNodes.size());
         this->experiment->initQueryFetchingTime();
     #endif
-
     vector<char *> results = this->output(currentActiveNodes);
 
     #ifdef BEVA_IS_COLLECT_TIME_H
@@ -222,7 +221,7 @@ vector<char *> Framework::processFullQuery(string &query, int queryPosition) {
     #ifdef BEVA_IS_COLLECT_MEMORY_H
         this->experiment->getMemoryUsedInProcessing();
     #endif
-
+	delete[] bitmaps;
     return results;
 }
 
@@ -230,8 +229,8 @@ vector<char *> Framework::processQuery(string &query, int queryId) {
     vector<ActiveNode> currentActiveNodes;
     vector<ActiveNode> oldActiveNodes;
 
-    unsigned bitmaps[CHAR_SIZE];
-    for (auto & bitmap : bitmaps) bitmap = this->beva->bitmapZero;
+    unsigned * bitmaps = new unsigned[CHAR_SIZE];
+    for (int x =0; x < CHAR_SIZE; x++) bitmaps[x] = this->beva->bitmapZero;
 
     for (int currentPrefixQuery = 1; currentPrefixQuery <= query.size(); currentPrefixQuery++) {
         swap(oldActiveNodes, currentActiveNodes);
@@ -241,12 +240,12 @@ vector<char *> Framework::processQuery(string &query, int queryId) {
     }
 
     vector<char *> results = this->output(currentActiveNodes);
-
+    delete[] bitmaps;
     return results;
 }
 
 void Framework::process(string query, int prefixQueryLength, int currentCountQuery,
-        vector<ActiveNode>& oldActiveNodes, vector<ActiveNode>& currentActiveNodes, unsigned (&bitmaps)[CHAR_SIZE]) {
+        vector<ActiveNode>& oldActiveNodes, vector<ActiveNode>& currentActiveNodes, unsigned *bitmaps) {
     if (query.empty()) return;
 
     #ifdef BEVA_IS_COLLECT_TIME_H

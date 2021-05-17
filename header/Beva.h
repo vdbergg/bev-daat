@@ -9,13 +9,14 @@
 #include "Trie.h"
 #include "ActiveNode.h"
 #include "utils.h"
+#include "C.h"
 
 #define CHAR_SIZE 128
 
 class Beva {
 public:
     Trie* trie;
-    EditVector* initialEditVector;
+    unsigned editVectorSize;
     Experiment *experiment;
     int editDistanceThreshold;
 
@@ -26,24 +27,50 @@ public:
     ~Beva();
     
     void process(char, int, vector<ActiveNode>& oldActiveNodes, vector<ActiveNode>& currentActiveNodes,
-            unsigned (&bitmaps)[CHAR_SIZE]);
-    void findActiveNodes(unsigned, ActiveNode&, vector<ActiveNode>&, unsigned (&bitmaps)[CHAR_SIZE]);
-    
-    inline unsigned buildBitmap(unsigned queryLength, unsigned lastPosition, char c, unsigned (&bitmaps)[CHAR_SIZE]) {
+            unsigned *bitmaps);
+    void findActiveNodes(unsigned queryLength, ActiveNode &oldActiveNode,
+			 vector<ActiveNode> &activeNodes, unsigned *bitmaps);
+      
+    inline unsigned buildBitmap(unsigned queryLength, unsigned lastPosition, char c, unsigned *bitmaps) {
         int k = (int) queryLength - (int) lastPosition;
         return utils::leftShiftBitInDecimal(bitmaps[c], this->editDistanceThreshold - k, this->bitmapSize);
     }
-    
-    inline EditVector* getNewEditVector(unsigned queryLength, EditVector* editVector, unsigned lastPosition, char c,
-                                   unsigned (&bitmaps)[CHAR_SIZE]) {
-        unsigned bitmap = this->buildBitmap(queryLength, lastPosition, c, bitmaps);
 
-        EditVector* newEditVector = new EditVector(this->editDistanceThreshold);
-        newEditVector->buildEditVectorWithBitmap(bitmap, editVector);
-        return newEditVector;
+    void updateBitmap(char, unsigned *bitmaps);
+
+    inline void buildEditVectorWithBitmap(unsigned bitmap, unsigned char* previousEditVector, unsigned char *editVector) {
+        unsigned limit = this->editVectorSize - 1;
+        int i;
+
+        editVector[0] = utils::min(
+                previousEditVector[0] + (1 - utils::getKthBitFromDecimal(bitmap, this->editVectorSize - 1)),
+                previousEditVector[1] + 1
+                );
+        for (i = 1; i < limit; i++) {
+            editVector[i] = utils::min(
+                    previousEditVector[i] + (1 - utils::getKthBitFromDecimal(bitmap, this->editVectorSize - 1 - i)),
+                    previousEditVector[i + 1] + 1,
+                    editVector[i - 1] + 1
+            );
+        }
+        editVector[i] = utils::min(
+                previousEditVector[i] + (1 - utils::getKthBitFromDecimal(bitmap, this->editVectorSize - 1 - i)),
+                editVector[i - 1] + 1
+                );
     }
 
-    void updateBitmap(char, unsigned (&bitmaps)[CHAR_SIZE]);
+    inline bool editVectorIsFinal(const unsigned char* editVector) {
+        for (int i = 0; i < this->editVectorSize; i++) {
+            if (editVector[i] <= this->editDistanceThreshold) return false;
+        }
+        return true;
+    }
+
+    inline unsigned getEditDistance(int k, unsigned char* editVector) {
+        int result = (this->editDistanceThreshold + k);
+        if (result < this->editVectorSize) return editVector[result];
+        return C::MARKER;
+    }
 };
 
 
