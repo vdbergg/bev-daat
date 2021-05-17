@@ -11,9 +11,8 @@ using namespace std;
 Beva::Beva(Trie *trie, Experiment* experiment, int editDistanceThreshold) {
     this->editDistanceThreshold = editDistanceThreshold;
     this->bitmapSize = (1 << ((2 * this->editDistanceThreshold) + 1)) - 1; // 2^(2tau + 1) - 1
+    this->editVectorSize = (2 * this->editDistanceThreshold) + 1;
     this->trie = trie;
-    this->initialEditVector = new EditVector(this->editDistanceThreshold);
-    this->initialEditVector->buildInitialEditVector();
     this->bitmapZero = 0;
     this->experiment = experiment;
 }
@@ -26,7 +25,7 @@ void Beva::process(char ch, int prefixQueryLength, vector<ActiveNode>& oldActive
     this->updateBitmap(ch, bitmaps);
 
     if (prefixQueryLength == 1) {
-        currentActiveNodes.emplace_back(this->trie->root, this->initialEditVector, 0);
+        currentActiveNodes.emplace_back(this->trie->root, this->buildInitialEditVector(), 0);
         #ifdef BEVA_IS_COLLECT_COUNT_OPERATIONS_H
         this->experiment->incrementNumberOfActiveNodes(query.length());
         #endif
@@ -58,16 +57,16 @@ void Beva::findActiveNodes(unsigned queryLength, ActiveNode &oldActiveNode,
         this->experiment->incrementNumberOfIterationInChildren(queryLength);
         #endif
 
-        EditVector* newEditVector = this->getNewEditVector(queryLength, oldActiveNode.editVector, tempSize,
-                                                 this->trie->getNode(child).getValue(), bitmaps);
+        unsigned bitmap = this->buildBitmap(queryLength, tempSize, this->trie->getNode(child).getValue(), bitmaps);
+        unsigned char * newEditVector = this->buildEditVectorWithBitmap(bitmap, oldActiveNode.editVector);
 
-        if (newEditVector->isFinal) continue;
+        if (this->editVectorIsFinal(newEditVector)) continue;
 
         #ifdef BEVA_IS_COLLECT_COUNT_OPERATIONS_H
         this->experiment->incrementNumberOfActiveNodes(queryLength);
         #endif
 
-        if (newEditVector->getEditDistance((int) queryLength - (int) tempSize) <= this->editDistanceThreshold) {
+        if (this->getEditDistance((int) queryLength - (int) tempSize, newEditVector) <= this->editDistanceThreshold) {
             activeNodes.emplace_back(child, newEditVector, tempSize);
         } else {
             ActiveNode tmp(child, newEditVector, tempSize);

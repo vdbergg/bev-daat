@@ -201,7 +201,6 @@ vector<char *> Framework::processFullQuery(string &query, int queryPosition) {
         this->experiment->endSimpleQueryProcessingTime(currentActiveNodes.size());
         this->experiment->initQueryFetchingTime();
     #endif
-
     vector<char *> results = this->output(currentActiveNodes);
 
     #ifdef BEVA_IS_COLLECT_TIME_H

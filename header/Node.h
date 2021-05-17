@@ -7,7 +7,6 @@
 
 
 #include <iostream>
-#include "EditVector.h"
 
 #define CHAR_SIZE 128
 

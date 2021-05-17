@@ -6,15 +6,13 @@
 #define BEVA_ACTIVENODE_H
 
 
-#include "EditVector.h"
-
 class ActiveNode {
 public:
-    EditVector* editVector;
+    unsigned char* editVector;
     unsigned node;
     unsigned level;
 
-    ActiveNode(unsigned, EditVector*, unsigned);
+    ActiveNode(unsigned, unsigned char*, unsigned);
 };
 
 #endif //BEVA_ACTIVENODE_H
