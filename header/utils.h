@@ -24,6 +24,12 @@ public:
     static inline int min(int a, int b, int c) {
         return std::min(std::min(a, b), c);
     };
+
+    static inline int min(int a, int b) {
+      if(a<b) return a;
+      return b;
+    };
+
     static inline void printBitsFromDecimal(unsigned decimal) {
         bitset<16> bitset1{decimal};
         cout << bitset1 << endl;
