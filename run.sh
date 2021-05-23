@@ -31,9 +31,9 @@ has_relevant_queries=${cfg_array[13]}
 
 on_recovery_mode=0
 
-for dt in $(seq ${dataset} 6)
+for dt in $(seq ${dataset} 4)
 do
-    if [[ "${dt}" != 1 ]] && [[ "${dt}" != 3 ]]; then # No have memory sufficient to experiment MEDLINE datasets
+    if [[ "${dt}" != 1 ]]; then # No have memory sufficient to experiment MEDLINE datasets
 
         for st in $(seq ${size_type} 3)
         do
