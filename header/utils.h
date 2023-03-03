@@ -43,6 +43,21 @@ public:
     static inline unsigned int setKthBitFromDecimal(unsigned int decimal, unsigned short k, unsigned bitmapSize) {
         return (1 << k | decimal) & bitmapSize;
     };
+
+    static inline long long fast_exponentiation(long long base, long long exponent) {
+        long long res = 1;
+        while (exponent > 0) {
+            if (exponent & 1)
+                res = res * base;
+            base = base * base;
+            exponent >>= 1;
+        }
+        return res;
+    }
+
+    static inline double dynamicScore(const double staticScore, const long long value) {
+        return staticScore * value;
+    }
 };
 
 

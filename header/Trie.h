@@ -6,6 +6,7 @@
 #include "Node.h"
 #include "Experiment.h"
 #include "StaticString.h"
+#include "../header/GlobalVariables.h"
 
 #ifndef BEVA_TRIE_H
 #define BEVA_TRIE_H
@@ -13,6 +14,7 @@
 using namespace std;
 
 extern vector<StaticString> records;
+extern vector<double> recordsStaticScore;
 
 class Trie {
 public:
@@ -50,6 +52,8 @@ public:
     }
 
     void shrinkToFit();
+    int search(char ch, unsigned parent);
+    void buildMaxScores();
 };
 
 #endif //BEVA_TRIE_H

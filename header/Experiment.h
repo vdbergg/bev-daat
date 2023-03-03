@@ -71,7 +71,7 @@ public:
     void initQueryFetchingTime();
     void endQueryFetchingTime(int, unsigned long);
     void endSimpleQueryFetchingTime(unsigned long);
-    void compileQueryProcessingTimes(int);
+    void compileQueryProcessingTimes(int, bool isTopK = false);
     void compileSimpleQueryProcessingTimes(string&, bool relevantReturned = false);
     void proportionOfBranchingSize(int size);
     void incrementNumberOfNodes();
@@ -81,7 +81,7 @@ public:
     void compileNumberOfIterationInChildren();
     void compileNumberOfNodes();
     void compileProportionOfBranchingSizeInBEVA2Level();
-    void saveQueryProcessingTime(string&, int);
+    void saveQueryProcessingTime(string&, int, bool isTopK = false);
     void getMemoryUsedInIndexing();
     void getMemoryUsedInProcessing();
 

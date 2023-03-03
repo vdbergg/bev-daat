@@ -10,6 +10,7 @@
 #include "ActiveNode.h"
 #include "utils.h"
 #include "C.h"
+#include "TopKHeap.h"
 
 #define CHAR_SIZE 128
 
@@ -22,14 +23,33 @@ public:
 
     int bitmapSize;
     unsigned bitmapZero;
+    long long *preCalculatedExponentiation;
 
-    Beva(Trie*, Experiment*, int);
+    Beva(Trie*, Experiment*, int, long long *preCalculatedExponentiation);
     ~Beva();
+
+    void processNoErrors(char ch,
+                         int prefixQueryLength,
+                         vector<ActiveNode>& oldNoErrorActiveNodes,
+                         vector<ActiveNode>& currentNoErrorActiveNodes);
     
     void process(char, int, vector<ActiveNode>& oldActiveNodes, vector<ActiveNode>& currentActiveNodes,
             unsigned *bitmaps);
     void findActiveNodes(unsigned queryLength, ActiveNode &oldActiveNode,
 			 vector<ActiveNode> &activeNodes, unsigned *bitmaps);
+
+    void processWithPruningV2(char ch,
+                              int prefixQueryLength,
+                              vector<ActiveNode>& oldActiveNodes,
+                              vector<ActiveNode>& currentActiveNodes,
+                              unsigned (&bitmaps)[CHAR_SIZE],
+                              TopKHeap& topKHeap);
+
+    void findActiveNodesWithPruningV2(unsigned queryLength,
+                                      ActiveNode &oldActiveNode,
+                                      vector<ActiveNode> &activeNodes,
+                                      unsigned (&bitmaps)[CHAR_SIZE],
+                                      TopKHeap& topKHeap);
       
     inline unsigned buildBitmap(unsigned queryLength, unsigned lastPosition, char c, unsigned *bitmaps) {
         int k = (int) queryLength - (int) lastPosition;

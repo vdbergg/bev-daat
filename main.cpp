@@ -25,7 +25,21 @@ void processingQueriesOutsideServer() {
         indexMax = 100;
     #endif
 
-    if (config["is_full_query_instrumentation"] == "0") {
+    if (config["use_top_k_v1"] == "1") {
+        for (int i = indexMin; i < indexMax; ++i) {
+            framework->processQueryWithTopKBruteForce(framework->queries[i], i);
+        }
+    } else if (config["use_top_k_v2"] == "1") {
+        for (int i = indexMin; i < indexMax; ++i) {
+            framework->processQueryWithTopKPruningV1(framework->queries[i], i);
+        }
+    } else if (config["use_top_k_v3"] == "1") {
+
+    } else if (config["use_top_k_v4"] == "1") {
+        for (int i = indexMin; i < indexMax; ++i) {
+            framework->processQueryWithTopKPruningV3(framework->queries[i], i);
+        }
+    } else if (config["is_full_query_instrumentation"] == "0") {
         for (int i = indexMin; i < indexMax; ++i) {
             framework->processQuery(framework->queries[i], i);
         }
@@ -69,7 +83,7 @@ void processingQueriesInServer() {
                 if (req.url_params.get("query") != nullptr) {
                     string query = boost::lexical_cast<string>(req.url_params.get("query"));
                     os << "The value of 'query' is " <<  query << '\n';
-                    results = framework->processFullQuery(query);
+                    framework->processFullQueryWithTopK(query, results);
                 }
 
                 crow::json::wvalue response;
@@ -95,7 +109,7 @@ void processingQueriesInServer() {
 int main(int argc, char** argv) {
     loadConfig();
 
-    framework = new Framework(config);
+    framework = new Framework();
 
     if (config["is_server"] == "0") {
         processingQueriesOutsideServer();
@@ -112,12 +126,10 @@ int main(int argc, char** argv) {
 }
 
 void loadConfig() {
-
     std::ifstream is_file("./path.cfg");
     std::string line;
 
-    while( std::getline(is_file, line) )
-    {
+    while (std::getline(is_file, line) ) {
         std::istringstream is_line(line);
         std::string key;
 

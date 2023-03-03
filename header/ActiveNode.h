@@ -11,6 +11,7 @@ public:
     unsigned char editVector[16];
     unsigned node;
     unsigned level;
+    unsigned editDistance;
 
     inline void buildInitialValue(unsigned node, unsigned level, unsigned editDistanceThreshold, unsigned editVectorSize) {
         this->node = node;
